@@ -49,7 +49,7 @@ if __name__ == '__main__':
     mediaobj = media.make(media_dir)
     port = 5000
     if 'MEDIA_SERVER_PORT' in os.environ:
-        port = os.environ['MEDIA_SERVER_PORT']
+        port = int(os.environ['MEDIA_SERVER_PORT'])
 
     app.debug = True
     app.run(host='0.0.0.0', port=port)
