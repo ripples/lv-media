@@ -2,6 +2,7 @@ import re
 from os import listdir
 from os.path import isfile, isdir, join
 
+
 class MockMedia:
     def __init__(self, location):
         self.location = location
@@ -40,6 +41,7 @@ class MockMedia:
                 'whiteBoard1456854913-0.png'
             ]
         }
+
 
 class ActualMedia:
     def __init__(self, location):
@@ -97,8 +99,10 @@ class ActualMedia:
         data['wurl']       = join('media', semester, course, lecture, 'whiteboard')
         return data
 
+
 def mock(location):
     return MockMedia(location)
+
 
 def make(location):
     return ActualMedia(location)
