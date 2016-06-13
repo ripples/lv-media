@@ -8,7 +8,7 @@ class MockMedia:
         self.location = location
 
     def semesters(self):
-        return ['F13', 'F14', 'F15', 'S14', 'S15', 'S16']
+        return ['F13', 'F14', 'F15', 'S14', 'S15', 'S16', 'F16']
 
     def courses(self, semester):
         return [
