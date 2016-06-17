@@ -8,7 +8,7 @@ class MockMedia:
         self.location = location
 
     def semesters(self):
-        return ['F13', 'F14', 'F15', 'S14', 'S15', 'S16']
+        return ['F13', 'F14', 'F15', 'S14', 'S15', 'S16', 'F16']
 
     def courses(self, semester):
         return [
@@ -44,65 +44,66 @@ class MockMedia:
 
 
 class ActualMedia:
-    def __init__(self, location):
+    def __init__(self, location: str):
         self.location = location
 
-    def semesters(self):
+    def semesters(self) -> list:
         return [d for d in listdir(self.location) if isdir(join(self.location, d))]
 
-    def courses(self, semester):
+    def courses(self, semester: str) -> list:
         dir = join(self.location, semester)
         return [d for d in listdir(dir) if isdir(join(dir, d))]
 
-    def lectures(self, semester, course):
+    def lectures(self, semester: str, course: str) -> list:
         dir = join(self.location, semester, course)
         return [d for d in listdir(dir) if isdir(join(dir, d))]
 
-    def _read_info(self, infofile):
+    @staticmethod
+    def _read_info(info_file: str) -> dict:
         data = {}
-        with open(infofile) as info:
+        with open(info_file) as info:
             for line in info.readlines():
-                m = re.search('duration: (\d+)', line)
-                if m != None:
-                    data['duration'] = m.group(1)
+                match = re.search('duration: (\d+)', line)
+                if match is not None:
+                    data['duration'] = match.group(1)
 
-                m = re.search('timestamp: (\d+)', line)
-                if m != None:
-                    data['timestamp'] = m.group(1)
+                match = re.search('timestamp: (\d+)', line)
+                if match is not None:
+                    data['timestamp'] = match.group(1)
 
-                m = re.search('source: (.+)', line)
-                if m != None:
-                    data['source'] = m.group(1)
+                match = re.search('source: (.+)', line)
+                if match is not None:
+                    data['source'] = match.group(1)
 
-                m = re.search('whiteboardCount: (.+)', line)
-                if m != None:
-                    data['whiteboard_count'] = m.group(1)
+                match = re.search('whiteboardCount: (.+)', line)
+                if match is not None:
+                    data['whiteboard_count'] = match.group(1)
 
-                m = re.search('computerCount: (.+)', line)
-                if m != None:
-                    data['computer_count'] = m.group(1)
+                match = re.search('computerCount: (.+)', line)
+                if match is not None:
+                    data['computer_count'] = match.group(1)
 
         return data
 
-    def lecture(self, semester, course, lecture):
-        lecturedir = join(self.location, semester, course, lecture)
-        infofile   = join(lecturedir, 'INFO')
-        data       = self._read_info(infofile)
-        cdir       = join(lecturedir, 'computer')
-        ldir       = join(lecturedir, 'whiteboard')
-        data['computer']   = [f for f in listdir(cdir) if isfile(join(cdir, f))]
+    def lecture(self, semester: str, course: str, lecture: str) -> dict:
+        lecture_dir = join(self.location, semester, course, lecture)
+        info_file = join(lecture_dir, 'INFO')
+        data = self._read_info(info_file)
+        cdir = join(lecture_dir, 'computer')
+        ldir = join(lecture_dir, 'whiteboard')
+        data['computer'] = [f for f in listdir(cdir) if isfile(join(cdir, f))]
         data['whiteboard'] = [f for f in listdir(ldir) if isfile(join(ldir, f))]
-        data['semester']   = semester
-        data['course']     = course
-        data['lecture']    = lecture
-        data['curl']       = join('media', semester, course, lecture, 'computer')
-        data['wurl']       = join('media', semester, course, lecture, 'whiteboard')
+        data['semester'] = semester
+        data['course'] = course
+        data['lecture'] = lecture
+        data['curl'] = join('media', semester, course, lecture, 'computer')
+        data['wurl'] = join('media', semester, course, lecture, 'whiteboard')
         return data
 
 
-def mock(location):
+def mock(location: str) -> MockMedia:
     return MockMedia(location)
 
 
-def make(location):
+def make(location: str) -> ActualMedia:
     return ActualMedia(location)
