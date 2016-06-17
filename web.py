@@ -53,4 +53,4 @@ if __name__ == '__main__':
         port = int(os.environ['MEDIA_SERVER_PORT'])
 
     # TODO: use flag to define debug or not, we shouldn't have debug in prod
-    app.run(port=port, debug=True)
+    app.run(host="0.0.0.0", port=port, debug=True)
