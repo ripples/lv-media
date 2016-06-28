@@ -33,12 +33,17 @@ class MockMedia:
             'computer_count': 1,
             'computer': [
                 'computer1456855479-0.png',
-                'computer1456855749-0.png'
+                'computer1456855479-0-thumb.png',
+                'computer1456855749-0.png',
+                'computer1456855749-0-thumb.png'
             ],
             'whiteboard': [
                 'whiteBoard1456854911-0.png',
+                'whiteBoard1456854911-0-thumb.png',
                 'whiteBoard1456854912-0.png',
+                'whiteBoard1456854912-0-thumb.png',
                 'whiteBoard1456854913-0.png'
+                'whiteBoard1456854913-0-thumb.png'
             ]
         }
 
