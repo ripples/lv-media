@@ -1,4 +1,5 @@
 #! /usr/bin/env python3
+import argparse
 import os
 import sys
 import json
@@ -7,7 +8,7 @@ import media
 
 # Initialize the media object to None. This gets
 # created from the command line arguments.
-mediaobj = None
+media_parser = None
 
 # Create the Flask application
 app = Flask(__name__)
@@ -20,37 +21,44 @@ def index():
 
 @app.route('/semesters')
 def semesters():
-    return json.dumps(mediaobj.semesters())
+    return json.dumps(media_parser.semesters())
 
 
 @app.route('/<semester>')
 def courses(semester):
-    return json.dumps(mediaobj.courses(semester))
+    return json.dumps(media_parser.courses(semester))
 
 
 @app.route('/<semester>/<course>')
 def lectures(semester, course):
-    return json.dumps(mediaobj.lectures(semester, course))
+    return json.dumps(media_parser.lectures(semester, course))
 
 
 @app.route('/<semester>/<course>/<lecture>')
-def lecture(semester, course, lecture):
-    return json.dumps(mediaobj.lecture(semester, course, lecture))
+def lecture_metadata(semester, course, lecture):
+    return json.dumps(media_parser.lecture_metadata(semester, course, lecture))
+
+
+@app.route('/<semester>/<course>/<lecture>/media')
+def lecture_media_data(semester, course, lecture):
+    return json.dumps(media_parser.lecture_media_data(semester, course, lecture))
+
 
 if __name__ == '__main__':
-    # TODO: use argparse
-    if len(sys.argv) < 2 or len(sys.argv) > 4:
-        print('usage: {} MEDIA_DIR DEBUG or create the appropriate system variable'.format(sys.argv[0]))
-        sys.exit()
+    parser = argparse.ArgumentParser(usage='set MEDIA_DIR in environment variable or provide a media directory')
+
+    parser.add_argument('-m', '--media_dir', metavar='DIRECTORY', type=str, help='media directory')
+    parser.add_argument('-d', '--debug', action='store_true', help='enable flask debugging')
+    args = parser.parse_args()
+
+    if args.media_dir:
+        media_dir = args.media_dir
     elif 'MEDIA_DIR' in os.environ:
-        media_dir = os.environ['MEDIA_DIR']
+        media_dir = args.media_dir
     else:
-        media_dir = sys.argv[1]
+        parser.print_help()
+        sys.exit()
 
-    mediaobj = media.mock(media_dir)
-    port = 5000
-    if 'MEDIA_SERVER_PORT' in os.environ:
-        port = int(os.environ['MEDIA_SERVER_PORT'])
+    media_parser = media.ActualMedia(media_dir)
 
-    # TODO: use flag to define debug or not, we shouldn't have debug in prod
-    app.run(host="0.0.0.0", port=port, debug=True)
+    app.run(host="0.0.0.0", port=5000, debug=(bool(args.debug)))
