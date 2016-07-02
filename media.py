@@ -90,20 +90,18 @@ class ActualMedia:
 
         return data
 
-    def lecture_metadata(self, semester: str, course: str, lecture: str) -> dict:
+    def lecture_meta(self, semester: str, course: str, lecture: str) -> dict:
         lecture_dir = join(self.location, semester, course, lecture)
         info_file = join(lecture_dir, 'INFO')
         return self._read_info(info_file)
 
-    def lecture_media_data(self, semester: str, course: str, lecture: str) -> dict:
+    def lecture_data(self, semester: str, course: str, lecture: str) -> dict:
         lecture_dir = join(self.location, semester, course, lecture)
-        data = {}
-
         lecture_directory = join(lecture_dir, 'whiteboard')
         computer_directory = join(lecture_dir, 'computer')
+        data = {'whiteboard': [f for f in listdir(lecture_directory) if isfile(join(lecture_directory, f))],
+                'computer': [f for f in listdir(computer_directory) if isfile(join(computer_directory, f))]}
 
-        data['whiteboard'] = [f for f in listdir(lecture_directory) if isfile(join(lecture_directory, f))]
-        data['computer'] = [f for f in listdir(computer_directory) if isfile(join(computer_directory, f))]
         return data
 
 

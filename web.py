@@ -35,14 +35,13 @@ def lectures(semester, course):
 
 
 @app.route('/<semester>/<course>/<lecture>')
-def lecture_metadata(semester, course, lecture):
-    return json.dumps(media_parser.lecture_metadata(semester, course, lecture))
+def lecture_meta(semester, course, lecture):
+    return json.dumps(media_parser.lecture_meta(semester, course, lecture))
 
 
-@app.route('/<semester>/<course>/<lecture>/media')
-def lecture_media_data(semester, course, lecture):
-    return json.dumps(media_parser.lecture_media_data(semester, course, lecture))
-
+@app.route('/<semester>/<course>/<lecture>/data')
+def lecture_data(semester, course, lecture):
+    return json.dumps(media_parser.lecture_data(semester, course, lecture))
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(usage='set MEDIA_DIR in environment variable or provide a media directory')
@@ -54,7 +53,7 @@ if __name__ == '__main__':
     if args.media_dir:
         media_dir = args.media_dir
     elif 'MEDIA_DIR' in os.environ:
-        media_dir = args.media_dir
+        media_dir = os.environ['MEDIA_DIR']
     else:
         parser.print_help()
         sys.exit()
