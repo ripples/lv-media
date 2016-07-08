@@ -63,6 +63,21 @@ class ActualMedia:
         dir = join(self.location, semester, course)
         return [d for d in listdir(dir) if isdir(join(dir, d))]
 
+    def lecture_meta(self, semester: str, course: str, lecture: str) -> dict:
+        lecture_dir = join(self.location, semester, course, lecture)
+        info_file = join(lecture_dir, 'INFO')
+        return self._read_info(info_file)
+
+    def lecture_data(self, semester: str, course: str, lecture: str) -> dict:
+        lecture_dir = join(self.location, semester, course, lecture)
+        whiteboard_directory = join(lecture_dir, 'whiteboard')
+        computer_directory = join(lecture_dir, 'computer')
+
+        return {
+            'whiteboard': self._read_image_files(whiteboard_directory),
+            'computer': self._read_image_files(computer_directory)
+        }
+
     @staticmethod
     def _read_info(info_file: str) -> dict:
         data = {}
@@ -90,17 +105,13 @@ class ActualMedia:
 
         return data
 
-    def lecture_meta(self, semester: str, course: str, lecture: str) -> dict:
-        lecture_dir = join(self.location, semester, course, lecture)
-        info_file = join(lecture_dir, 'INFO')
-        return self._read_info(info_file)
-
-    def lecture_data(self, semester: str, course: str, lecture: str) -> dict:
-        lecture_dir = join(self.location, semester, course, lecture)
-        lecture_directory = join(lecture_dir, 'whiteboard')
-        computer_directory = join(lecture_dir, 'computer')
-        return {'whiteboard': [f for f in listdir(lecture_directory) if isfile(join(lecture_directory, f))],
-                'computer': [f for f in listdir(computer_directory) if isfile(join(computer_directory, f))]}
+    @staticmethod
+    def _read_image_files(directory: str) -> list:
+        files = []
+        for file in listdir(directory):
+            if not file.endswith("-thumb.png"):
+                files.append(file.split(".")[0])
+        return sorted(files, key=lambda file: file.split("-")[0])
 
 
 def mock(location: str) -> MockMedia:
