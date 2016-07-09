@@ -108,10 +108,10 @@ class ActualMedia:
     @staticmethod
     def _read_image_files(directory: str) -> list:
         files = []
-        for file in listdir(directory):
-            if not file.endswith("-thumb.png"):
-                files.append(file.split(".")[0])
-        return sorted(files, key=lambda file: file.split("-")[0])
+        for current_file in listdir(directory):
+            if not current_file.endswith("-thumb.png"):
+                files.append(current_file.split(".")[0])
+        return sorted(files, key=lambda file: file)
 
 
 def mock(location: str) -> MockMedia:
