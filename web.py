@@ -4,7 +4,7 @@ import os
 import sys
 import json
 from flask import Flask, abort, jsonify, make_response
-import media
+import parser
 
 # Initialize the media object to None. This gets
 # created from the command line arguments.
@@ -60,20 +60,22 @@ def lecture_data(semester, course, lecture):
         return jsonify({"error": "Unable to read lecture image directories"}), 404
 
 if __name__ == '__main__':
-    parser = argparse.ArgumentParser(usage='set IMAGE_MEDIA_DIR in environment variable or provide a media directory')
+    arg_parser = argparse.ArgumentParser(
+        usage='set IMAGE_MEDIA_DIR in environment variable or provide a media directory'
+    )
 
-    parser.add_argument('-m', '--media_dir', metavar='DIRECTORY', type=str, help='media directory')
-    parser.add_argument('-d', '--debug', action='store_true', help='enable flask debugging')
-    args = parser.parse_args()
+    arg_parser.add_argument('-m', '--media_dir', metavar='DIRECTORY', type=str, help='media directory')
+    arg_parser.add_argument('-d', '--debug', action='store_true', help='enable flask debugging')
+    args = arg_parser.parse_args()
 
     if args.media_dir:
         media_dir = args.media_dir
     elif 'IMAGE_MEDIA_DIR' in os.environ:
         media_dir = os.environ['IMAGE_MEDIA_DIR']
     else:
-        parser.print_help()
+        arg_parser.print_help()
         sys.exit()
 
-    media_parser = media.ActualMedia(media_dir)
+    media_parser = parser.Parser(media_dir)
 
     app.run(host="0.0.0.0", port=int(os.environ.get("MEDIA_SERVER_PORT")) or 5000, debug=bool(args.debug))
