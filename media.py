@@ -99,10 +99,8 @@ class ActualMedia:
         lecture_dir = join(self.location, semester, course, lecture)
         lecture_directory = join(lecture_dir, 'whiteboard')
         computer_directory = join(lecture_dir, 'computer')
-        data = {'whiteboard': [f for f in listdir(lecture_directory) if isfile(join(lecture_directory, f))],
+        return {'whiteboard': [f for f in listdir(lecture_directory) if isfile(join(lecture_directory, f))],
                 'computer': [f for f in listdir(computer_directory) if isfile(join(computer_directory, f))]}
-
-        return data
 
 
 def mock(location: str) -> MockMedia:
