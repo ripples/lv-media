@@ -1,10 +1,10 @@
 import re
-from os import listdir
+from os import listdir, environ
 from os.path import isdir, join
 
 
 class Parser:
-    def __init__(self, location: str):
+    def __init__(self, location=environ.get('IMAGE_MEDIA_DIR')):
         self.location = location
 
     def semesters(self) -> list:
@@ -33,6 +33,16 @@ class Parser:
             'computer': self._read_image_files(computer_directory)
         }
 
+    def read_all(self):
+        return {semester:
+                {course:
+                 {lecture:
+                  {k_meta: v_meta
+                   for k_meta, v_meta in self.lecture_meta(semester, course, lecture).items()}
+                  for lecture in self.lectures(semester, course)}
+                 for course in self.courses(semester)}
+                for semester in self.semesters()}
+
     @staticmethod
     def _read_info(info_file: str) -> dict:
         data = {}
@@ -56,9 +66,9 @@ class Parser:
     def _read_image_files(directory: str) -> dict:
         files = {}
         for current_file in listdir(directory):
-            if not current_file.endswith("-thumb.png"):
-                file_name = current_file.split(".")[0]
-                file_info = file_name.split("-")
+            if not current_file.endswith('-thumb.png'):
+                file_name = current_file.split('.')[0]
+                file_info = file_name.split('-')
                 id = file_info[1]
                 if id not in files:
                     files[id] = []
