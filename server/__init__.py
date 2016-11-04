@@ -1,8 +1,11 @@
 import argparse
-import flask
 import os
+from pathlib import Path
+
+import flask
 from apscheduler.schedulers.background import BackgroundScheduler
 from apscheduler.triggers.interval import IntervalTrigger
+from server.routes.index import cache as course_cache
 
 
 def _register_blueprints(app):
@@ -29,7 +32,13 @@ def _parse_env_vars(args) -> dict:
         else:
             raise Exception('set IMAGE_MEDIA_DIR in environment variable or provide a directory')
 
-    env_vars['port'] = os.environ.get('MEDIA_SERVER_PORT') or 5000
+    env_vars['port'] = os.environ.get('MEDIA_SERVER_PORT', 5000)
+    env_vars['db_credentials'] = {
+        'password': os.environ['MYSQL_ROOT_PASSWORD'],
+        'db': os.environ['MYSQL_DATABASE'],
+        'host': os.environ['MYSQL_HOSTNAME'],
+        'user': os.environ['MYSQL_USER']
+    }
     env_vars.update(vars(args))
 
     return env_vars
@@ -44,11 +53,11 @@ def _configure_app():
 def _configure_task_runner():
     scheduler = BackgroundScheduler()
 
-    from server.tasks.parse_courses import run
-    from server.routes.index import cache
+    from server.tasks.course_parsers import run
     scheduler.add_job(
         run,
-        args=[cache],
+        name='Course Parser',
+        args=[course_cache],
         trigger=IntervalTrigger(minutes=15),
         id='parse_courses',
         replace_existing=True,
@@ -58,10 +67,26 @@ def _configure_task_runner():
     return scheduler
 
 
+# TODO: This entire function is stupid, will be fixed later
+def _insert_initial_data(db_credentials: dict):
+    if os.environ.get('WERKZEUG_RUN_MAIN') == 'true':
+        return
+
+    csv_path = os.environ['USERS_CSV_PATH']
+    if csv_path and Path(csv_path).is_file():
+        from server.tasks.insert_data import run
+        run(csv_path, db_credentials)
+
+    from server.tasks.insert_courses import run
+    run(course_cache, db_credentials)
+    print("Inserted initial data")
+
+
 def create_app():
     app = _configure_app()
     _register_blueprints(app)
     args = _parse_env_vars(_parse_args())
     task_runner = _configure_task_runner()
+    _insert_initial_data(args['db_credentials'])
 
     return app, args, task_runner
