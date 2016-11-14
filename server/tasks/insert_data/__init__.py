@@ -13,7 +13,7 @@ def run(file_path: str, db_credentials: dict) -> dict:
         semester = get_current_semester()
         i = 1
 
-        with connection as cursor:
+        with connection.cursor() as cursor:
             # Super shitty but dirty way of checking if we've already inserted into db
             cursor.execute('SELECT * FROM users WHERE id = 1')
             if bool(cursor.fetchone()):

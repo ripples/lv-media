@@ -1,10 +1,12 @@
 import re
-from os import listdir, environ
+from os import listdir
 from os.path import isdir, join
+
+from server.utils.constants import CONTAINER_MEDIA_DIR
 
 
 class Parser:
-    def __init__(self, location=environ.get('IMAGE_MEDIA_DIR')):
+    def __init__(self, location=CONTAINER_MEDIA_DIR):
         self.location = location
 
     def semesters(self) -> list:
