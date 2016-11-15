@@ -5,7 +5,6 @@ from pathlib import Path
 import flask
 from apscheduler.schedulers.background import BackgroundScheduler
 from apscheduler.triggers.interval import IntervalTrigger
-from flask import make_response, jsonify
 
 from server.routes.index import cache as course_cache
 from server.utils.constants import CONTAINER_MEDIA_DIR
@@ -16,10 +15,9 @@ def _register_blueprints(app):
     app.register_blueprint(index)
 
 
-def _register_error_handler(app):
-    @app.errorhandler(KeyError)
-    def handle_key_error(error: KeyError):
-        return make_response(jsonify({"error": "key not found"}), 404)
+def _register_error_handlers(app):
+    from server.exceptions.NotFound import NotFound
+    app.register_error_handler(NotFound, NotFound.handle_key_error)
 
 
 def _parse_args():
@@ -88,7 +86,7 @@ def _insert_initial_data(db_credentials: dict):
 def create_app():
     app = _configure_app()
     _register_blueprints(app)
-    _register_error_handler(app)
+    _register_error_handlers(app)
     args = _parse_env_vars(_parse_args())
     task_runner = _configure_task_runner()
     _insert_initial_data(args['db_credentials'])
