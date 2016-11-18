@@ -3,7 +3,6 @@ from flask import abort, jsonify, Blueprint
 
 from server.exceptions.NotFound import NotFound
 from server.libs.parser import Parser
-from server.utils.decorators import decode_args
 
 index = Blueprint('index', __name__)
 parser = Parser()
@@ -21,7 +20,6 @@ def semesters():
 
 
 @index.route('/<semester>')
-@decode_args
 def courses(semester):
     try:
         return jsonify(list(cache[semester].keys()))
@@ -30,7 +28,6 @@ def courses(semester):
 
 
 @index.route('/<semester>/<course>')
-@decode_args
 def lectures(semester, course):
     try:
         return jsonify(list(cache[semester][course].keys()))
@@ -39,7 +36,6 @@ def lectures(semester, course):
 
 
 @index.route('/<semester>/<course>/<lecture>')
-@decode_args
 def lecture_meta(semester, course, lecture):
     try:
         return jsonify(list(cache[semester][course][lecture]))
@@ -48,6 +44,5 @@ def lecture_meta(semester, course, lecture):
 
 
 @index.route('/<semester>/<course>/<lecture>/data')
-@decode_args
 def lecture_data(semester, course, lecture):
     return jsonify(parser.lecture_data(semester, course, lecture))
