@@ -3,7 +3,7 @@ from collections import defaultdict
 from server.libs.database import connect_or_wait, get_current_semester
 
 
-def run(file_path: str, db_credentials: dict) -> dict:
+def run(file_path: str, db_credentials: dict) -> None:
     connection = connect_or_wait(db_credentials)
 
     with open(file_path, mode='r', newline='') as students:

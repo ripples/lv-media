@@ -30,15 +30,7 @@ def courses(semester):
 @index.route('/<semester>/<course>')
 def lectures(semester, course):
     try:
-        return jsonify(list(cache[semester][course].keys()))
-    except KeyError as e:
-        raise NotFound("{} not found".format(e))
-
-
-@index.route('/<semester>/<course>/<lecture>')
-def lecture_meta(semester, course, lecture):
-    try:
-        return jsonify(list(cache[semester][course][lecture]))
+        return jsonify(cache[semester][course])
     except KeyError as e:
         raise NotFound("{} not found".format(e))
 
