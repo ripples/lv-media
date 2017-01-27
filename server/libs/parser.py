@@ -35,7 +35,7 @@ class Parser:
             'computer': self._read_image_files(computer_directory)
         }
 
-    def read_all(self):
+    def read_all(self) -> dict:
         return {semester:
                 {course:
                  {lecture:

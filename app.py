@@ -1,4 +1,5 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
+
 import logging
 from logging.handlers import TimedRotatingFileHandler
 from server import create_app
