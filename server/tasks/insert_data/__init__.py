@@ -1,15 +1,18 @@
 import csv
 from collections import defaultdict
+import requests
+from requests.adapters import HTTPAdapter
+from requests.packages.urllib3 import Retry
+
 from server.libs.database import connect_or_wait, get_current_semester
 
 
-def run(file_path: str, db_credentials: dict) -> None:
-    connection = connect_or_wait(db_credentials)
-
+def run(file_path: str, env_args: dict) -> None:
+    connection = connect_or_wait(env_args['db_credentials'])
+    users = {}
     with open(file_path, mode='r', newline='') as students:
         reader = csv.reader(students, delimiter=',', quotechar='"')
         courses_to_users = defaultdict(list)
-        users = {}
         semester = get_current_semester()
         i = 1
 
@@ -26,14 +29,14 @@ def run(file_path: str, db_credentials: dict) -> None:
                 course = '{} {}'.format(course_info[0], course_info[1])
 
                 if email not in users:
-                    users[email] = (i, password, email, '', '', '2', 0)
+                    users[email] = (i, password, email, '', '', '2', 1)
                     courses_to_users[course].append(i)
                     i += 1
                 else:
                     courses_to_users[course].append(users[email][0])
 
             cursor.executemany('''
-                  INSERT INTO users(id, password, email, fname, lname, user_type_id, verified)
+                  INSERT INTO users(id, password, email, fname, lname, user_type_id, password_reset_required)
                   VALUES(%s, %s ,%s ,%s ,%s ,%s ,%s)
                   ''', users.values())
 
@@ -53,3 +56,9 @@ def run(file_path: str, db_credentials: dict) -> None:
                   INSERT INTO lkp_course_users(course_id, semester_id, user_id)
                   VALUES(%s, %s, %s)
                   ''', lkp_course_users)
+    connection.commit()
+
+    url = "http://{}:{}/internal/users/invite".format(env_args['lv-server-host'], env_args['lv-server-port'])
+    s = requests.Session()
+    s.mount('http://', HTTPAdapter(max_retries=Retry(total=10, backoff_factor=0.1)))
+    # s.post(url, json={"emails": })
