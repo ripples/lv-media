@@ -3,8 +3,8 @@ import logging
 from server.libs.database import connect_or_wait, get_current_semester
 
 
-def run(cache: dict, db_credentials: dict):
-    connection = connect_or_wait(db_credentials)
+def run(cache: dict, env_vars: dict):
+    connection = connect_or_wait(env_vars['db_credentials'])
     semester = get_current_semester()
     with connection.cursor() as cursor:
         try:

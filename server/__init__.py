@@ -38,7 +38,10 @@ def _parse_env_vars(args) -> dict:
             'db': os.environ['MYSQL_DATABASE'],
             'host': os.environ['MYSQL_HOSTNAME'],
             'user': os.environ['MYSQL_USER']
-        }}
+        },
+        'lv-server-host': os.environ.get('SERVER_HOSTNAME', 'lv-server'),
+        'lv-server-port': os.environ.get('SERVER_PORT', 3000)
+    }
     env_vars.update(vars(args))
 
     return env_vars
@@ -68,18 +71,18 @@ def _configure_task_runner():
 
 
 # TODO: This entire function is stupid, will be fixed later
-def _insert_initial_data(db_credentials: dict):
+def _insert_initial_data(env_vars: dict):
     if os.environ.get('WERKZEUG_RUN_MAIN') == 'true':
         return
 
     csv_path = os.path.join(CONTAINER_MEDIA_DIR, os.environ['USERS_CSV_PATH'])
     if csv_path and Path(csv_path).is_file():
         from server.tasks.insert_data import run
-        run(csv_path, db_credentials)
+        run(csv_path, env_vars)
         print("Inserted initial data")
 
     from server.tasks.insert_courses import run
-    run(course_cache, db_credentials)
+    run(course_cache, env_vars)
     print("Inserted initial courses")
 
 
@@ -89,6 +92,6 @@ def create_app():
     _register_error_handlers(app)
     args = _parse_env_vars(_parse_args())
     task_runner = _configure_task_runner()
-    _insert_initial_data(args['db_credentials'])
+    _insert_initial_data(args)
 
     return app, args, task_runner
