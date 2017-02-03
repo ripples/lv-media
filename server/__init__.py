@@ -40,7 +40,8 @@ def _parse_env_vars(args) -> dict:
             'user': os.environ['MYSQL_USER']
         },
         'lv-server-host': os.environ.get('SERVER_HOSTNAME', 'lv-server'),
-        'lv-server-port': os.environ.get('SERVER_PORT', 3000)
+        'lv-server-port': os.environ.get('SERVER_PORT', 3000),
+        'environment': os.environ.get('NODE_ENV', 'development')
     }
     env_vars.update(vars(args))
 

@@ -7,9 +7,17 @@ from requests.packages.urllib3 import Retry
 from server.libs.database import connect_or_wait, get_current_semester
 
 
-def run(file_path: str, env_args: dict) -> None:
-    connection = connect_or_wait(env_args['db_credentials'])
+def run(file_path: str, envs: dict) -> None:
+    connection = connect_or_wait(envs['db_credentials'])
     users = {}
+
+    if envs['environment'] == "development":
+        password = '$2a$10$JofcKIcaYmEaFudtzfuAfuFpwLPe3t/czs/cKdsz0IEdieXmWnu76'
+        invite = False
+    else:
+        password = ''
+        invite = True
+
     with open(file_path, mode='r', newline='') as students:
         reader = csv.reader(students, delimiter=',', quotechar='"')
         courses_to_users = defaultdict(list)
@@ -22,7 +30,6 @@ def run(file_path: str, env_args: dict) -> None:
             if bool(cursor.fetchone()):
                 return
 
-            password = '$2a$10$JofcKIcaYmEaFudtzfuAfuFpwLPe3t/czs/cKdsz0IEdieXmWnu76'
             for row in reader:
                 course_info = row[1].split()
                 email = row[-1]
@@ -58,7 +65,8 @@ def run(file_path: str, env_args: dict) -> None:
                   ''', lkp_course_users)
     connection.commit()
 
-    url = "http://{}:{}/internal/users/invite".format(env_args['lv-server-host'], env_args['lv-server-port'])
-    s = requests.Session()
-    s.mount('http://', HTTPAdapter(max_retries=Retry(total=10, backoff_factor=0.1)))
-    # s.post(url, json={"emails": })
+    if invite:
+        url = 'http://{}:{}/internal/users/invite'.format(envs['lv-server-host'], envs['lv-server-port'])
+        s = requests.Session()
+        s.mount('http://', HTTPAdapter(max_retries=Retry(total=10, backoff_factor=0.1)))
+        s.post(url, json={'emails': list(users)})
