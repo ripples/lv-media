@@ -1,8 +1,5 @@
 import csv
 from collections import defaultdict
-import requests
-from requests.adapters import HTTPAdapter
-from requests.packages.urllib3 import Retry
 
 from server.libs.database import connect_or_wait, get_current_semester
 
@@ -13,10 +10,8 @@ def run(file_path: str, envs: dict) -> None:
 
     if envs['environment'] == "development":
         password = '$2a$10$JofcKIcaYmEaFudtzfuAfuFpwLPe3t/czs/cKdsz0IEdieXmWnu76'
-        invite = False
     else:
         password = ''
-        invite = True
 
     with open(file_path, mode='r', newline='') as students:
         reader = csv.reader(students, delimiter=',', quotechar='"')
@@ -65,8 +60,3 @@ def run(file_path: str, envs: dict) -> None:
                   ''', lkp_course_users)
     connection.commit()
 
-    if invite:
-        url = 'http://{}:{}/internal/users/invite'.format(envs['lv-server-host'], envs['lv-server-port'])
-        s = requests.Session()
-        s.mount('http://', HTTPAdapter(max_retries=Retry(total=10, backoff_factor=0.1)))
-        s.post(url, json={'emails': list(users)})

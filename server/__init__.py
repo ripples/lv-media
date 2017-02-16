@@ -1,5 +1,6 @@
 import argparse
 import os
+from datetime import datetime, timedelta
 from pathlib import Path
 
 import flask
@@ -54,7 +55,7 @@ def _configure_app():
     return app
 
 
-def _configure_task_runner():
+def _configure_task_runner(env_vars):
     scheduler = BackgroundScheduler()
 
     from server.tasks.course_parsers import run
@@ -66,6 +67,18 @@ def _configure_task_runner():
         id='parse_courses',
         replace_existing=True,
         coalesce=True
+    )
+
+    from server.tasks.invite_users import run
+    scheduler.add_job(
+        run,
+        name='Invite Users',
+        args=[env_vars],
+        trigger=IntervalTrigger(days=1),
+        id='invite_users',
+        replace_existing=False,
+        coalesce=True,
+        next_run_time=datetime.today() + timedelta(minutes=10)
     )
 
     return scheduler
@@ -92,7 +105,7 @@ def create_app():
     _register_blueprints(app)
     _register_error_handlers(app)
     args = _parse_env_vars(_parse_args())
-    task_runner = _configure_task_runner()
+    task_runner = _configure_task_runner(args)
     _insert_initial_data(args)
 
     return app, args, task_runner
