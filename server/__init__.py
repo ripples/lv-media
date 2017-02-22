@@ -83,7 +83,7 @@ def _configure_task_runner(app_args):
         id='insert_fs_courses',
         replace_existing=False,
         coalesce=True,
-        next_run_time=datetime.today() + timedelta(seconds=5)
+        next_run_time=datetime.today() + timedelta(minutes=5)
     )
 
     from server.tasks.insert_users_and_courses import run
@@ -94,7 +94,7 @@ def _configure_task_runner(app_args):
         id='insert_users_and_courses',
         replace_existing=False,
         coalesce=True,
-        next_run_time=datetime.today() + timedelta(seconds=10)
+        next_run_time=datetime.today() + timedelta(minutes=10)
     )
 
     from server.tasks.invite_users import run
@@ -106,7 +106,7 @@ def _configure_task_runner(app_args):
         id='invite_users',
         replace_existing=False,
         coalesce=True,
-        next_run_time=datetime.today() + timedelta(minutes=10)
+        next_run_time=datetime.today() + timedelta(minutes=15)
     )
 
     return scheduler
