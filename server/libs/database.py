@@ -1,9 +1,10 @@
 import os
 from datetime import datetime
+from time import sleep
 
-import collections
 from typing import Union
 
+import logging
 import pymysql
 from pymysql.connections import Connection
 
@@ -22,7 +23,7 @@ db_credentials = {
 def connect() -> Connection:
     """
 
-    Connects to the database or users existing connection
+    Connects to the database or uses existing connection
 
     Returns:
         Connection: database connection
@@ -35,6 +36,38 @@ def connect() -> Connection:
         _connection.ping()
     else:
         _connection = pymysql.connect(**db_credentials, connect_timeout=60, autocommit=True)
+    return _connection
+
+
+def connect_or_wait() -> Connection:
+    """
+
+    Connects or waits to connect to the database or uses existing connection
+
+    Returns:
+        Connection: database connection
+
+    TODO:
+        use DictCursor as default
+    """
+    global _connection
+    if _connection:
+        _connection.ping()
+        return _connection
+
+    attempts = 0
+    max_attempts = 10
+    sleep_time = 3
+
+    while not _connection:
+        try:
+            _connection = connect()
+        except pymysql.err.OperationalError:
+            if attempts >= max_attempts:
+                logging.getLogger().error('Failed to connect to db after {} seconds'.format(sleep_time * max_attempts))
+                raise pymysql.err.OperationalError()
+            attempts += 1
+            sleep(sleep_time)
     return _connection
 
 

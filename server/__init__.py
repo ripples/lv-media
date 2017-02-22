@@ -6,7 +6,7 @@ import flask
 from apscheduler.schedulers.background import BackgroundScheduler
 from apscheduler.triggers.interval import IntervalTrigger
 
-from server.libs.database import connect
+from server.libs.database import connect_or_wait
 from server.routes.index import courses_cache
 from server.utils.constants import CONTAINER_MEDIA_DIR
 
@@ -60,6 +60,14 @@ def _configure_task_runner(app_args):
     if app_args['WERKZEUG_RUN_MAIN'] != 'true':
         return
 
+    #TODO cleanup
+    if app_args["environment"] == "development":
+        insert_fs_courses_next_run_time = {'seconds': 30}
+        invite_users_next_run_time = {'seconds': 45}
+    else:
+        insert_fs_courses_next_run_time = {'minutes': 5}
+        invite_users_next_run_time = {'minutes': 10}
+
     scheduler = BackgroundScheduler()
 
     from server.tasks.cache_fs_courses import run
@@ -83,7 +91,7 @@ def _configure_task_runner(app_args):
         id='insert_fs_courses',
         replace_existing=False,
         coalesce=True,
-        next_run_time=datetime.today() + timedelta(minutes=5)
+        next_run_time=datetime.today() + timedelta(**insert_fs_courses_next_run_time)
     )
 
     from server.tasks.insert_users_and_courses import run
@@ -94,7 +102,7 @@ def _configure_task_runner(app_args):
         id='insert_users_and_courses',
         replace_existing=False,
         coalesce=True,
-        next_run_time=datetime.today() + timedelta(minutes=10)
+        next_run_time=datetime.today() + timedelta(**invite_users_next_run_time)
     )
 
     from server.tasks.invite_users import run
@@ -113,13 +121,15 @@ def _configure_task_runner(app_args):
 
 
 def _setup_dev(dev_email: str):
-    connection = connect()
+    connection = connect_or_wait()
     with connection.cursor() as cursor:
         cursor.execute("""
-        UPDATE users
-        SET password = '$2a$10$JofcKIcaYmEaFudtzfuAfuFpwLPe3t/czs/cKdsz0IEdieXmWnu76'
-        WHERE email = %s""", dev_email)
-        logger.debug("Inserted dev user {}", dev_email)
+        INSERT INTO users(email, password)
+        VALUES (%s, '$2a$10$JofcKIcaYmEaFudtzfuAfuFpwLPe3t/czs/cKdsz0IEdieXmWnu76')
+          ON DUPLICATE KEY UPDATE
+          password=VALUES(password)
+        """, dev_email)
+        logger.debug("Inserted dev user {}".format(dev_email))
 
 
 def create_app():
