@@ -6,7 +6,7 @@ from server.libs.parser import Parser
 
 index = Blueprint('index', __name__)
 parser = Parser()
-cache = parser.read_all()
+courses_cache = parser.read_all()
 
 
 @index.route('/favicon.ico')
@@ -16,13 +16,13 @@ def root():
 
 @index.route('/semesters')
 def semesters():
-    return jsonify(list(cache.keys()))
+    return jsonify(list(courses_cache.keys()))
 
 
 @index.route('/<semester>')
 def courses(semester):
     try:
-        return jsonify(list(cache[semester].keys()))
+        return jsonify(list(courses_cache[semester].keys()))
     except KeyError as e:
         raise NotFound("{} not found".format(e))
 
@@ -30,7 +30,7 @@ def courses(semester):
 @index.route('/<semester>/<course>')
 def lectures(semester, course):
     try:
-        return jsonify(cache[semester][course])
+        return jsonify(courses_cache[semester][course])
     except KeyError as e:
         raise NotFound("{} not found".format(e))
 

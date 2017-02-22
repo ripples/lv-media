@@ -4,14 +4,14 @@ import requests
 from requests.adapters import HTTPAdapter
 from requests.packages.urllib3 import Retry
 
-from server.libs.database import connect_or_wait
+from server.libs.database import connect
 
 
 def run(envs: dict):
     if envs['environment'] != "production":
         return
 
-    connection = connect_or_wait(envs['db_credentials'])
+    connection = connect()
     with connection.cursor() as cursor:
 
         cursor.execute("SELECT email FROM users WHERE invited=b'0'")
@@ -24,5 +24,3 @@ def run(envs: dict):
         response.raise_for_status()
 
         cursor.executemany("UPDATE users SET invited=b'1' WHERE email = %s", emails)
-
-    connection.commit()

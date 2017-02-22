@@ -1,14 +1,18 @@
 import argparse
 import os
 from datetime import datetime, timedelta
-from pathlib import Path
 
 import flask
 from apscheduler.schedulers.background import BackgroundScheduler
 from apscheduler.triggers.interval import IntervalTrigger
 
-from server.routes.index import cache as course_cache
+from server.libs.database import connect
+from server.routes.index import courses_cache
 from server.utils.constants import CONTAINER_MEDIA_DIR
+
+import logging
+logging.basicConfig(level=logging.DEBUG)
+logger = logging.getLogger(__name__)
 
 
 def _register_blueprints(app):
@@ -34,15 +38,11 @@ def _parse_args():
 def _parse_env_vars(args) -> dict:
     env_vars = {
         'port': os.environ.get('MEDIA_SERVER_PORT', 5000),
-        'db_credentials': {
-            'password': os.environ['MYSQL_ROOT_PASSWORD'],
-            'db': os.environ['MYSQL_DATABASE'],
-            'host': os.environ['MYSQL_HOSTNAME'],
-            'user': os.environ['MYSQL_USER']
-        },
         'lv-server-host': os.environ.get('SERVER_HOSTNAME', 'lv-server'),
         'lv-server-port': os.environ.get('SERVER_PORT', 3000),
-        'environment': os.environ.get('NODE_ENV', 'development')
+        'environment': os.environ.get('NODE_ENV', 'development'),
+        'WERKZEUG_RUN_MAIN': os.environ.get('WERKZEUG_RUN_MAIN', 'false'),
+        'dev_email': os.environ.get('DEV_EMAIL', None),
     }
     env_vars.update(vars(args))
 
@@ -55,25 +55,53 @@ def _configure_app():
     return app
 
 
-def _configure_task_runner(env_vars):
+def _configure_task_runner(app_args):
+    # We don't want to reload the task runner when flask reloads
+    if app_args['WERKZEUG_RUN_MAIN'] != 'true':
+        return
+
     scheduler = BackgroundScheduler()
 
-    from server.tasks.course_parsers import run
+    from server.tasks.cache_fs_courses import run
     scheduler.add_job(
         run,
-        name='Course Parser',
-        args=[course_cache],
+        name='Cache Courses From File System',
+        args=[courses_cache],
         trigger=IntervalTrigger(minutes=15),
-        id='parse_courses',
+        id='cache_fs_courses',
         replace_existing=True,
         coalesce=True
+        # next run time = loaded immediately in index route
+    )
+
+    from server.tasks.insert_fs_courses import run
+    scheduler.add_job(
+        run,
+        name='Insert Courses From File System',
+        args=[courses_cache],
+        trigger=IntervalTrigger(days=1),
+        id='insert_fs_courses',
+        replace_existing=False,
+        coalesce=True,
+        next_run_time=datetime.today() + timedelta(seconds=5)
+    )
+
+    from server.tasks.insert_users_and_courses import run
+    scheduler.add_job(
+        run,
+        name='Insert Users and Courses',
+        trigger=IntervalTrigger(minutes=30),
+        id='insert_users_and_courses',
+        replace_existing=False,
+        coalesce=True,
+        next_run_time=datetime.today() + timedelta(seconds=10)
     )
 
     from server.tasks.invite_users import run
     scheduler.add_job(
         run,
         name='Invite Users',
-        args=[env_vars],
+        args=[app_args],
         trigger=IntervalTrigger(days=1),
         id='invite_users',
         replace_existing=False,
@@ -84,20 +112,14 @@ def _configure_task_runner(env_vars):
     return scheduler
 
 
-# TODO: This entire function is stupid, will be fixed later
-def _insert_initial_data(env_vars: dict):
-    if os.environ.get('WERKZEUG_RUN_MAIN') == 'true':
-        return
-
-    csv_path = os.path.join(CONTAINER_MEDIA_DIR, os.environ['USERS_CSV_PATH'])
-    if csv_path and Path(csv_path).is_file():
-        from server.tasks.insert_data import run
-        run(csv_path, env_vars)
-        print("Inserted initial data")
-
-    from server.tasks.insert_courses import run
-    run(course_cache, env_vars)
-    print("Inserted initial courses")
+def _setup_dev(dev_email: str):
+    connection = connect()
+    with connection.cursor() as cursor:
+        cursor.execute("""
+        UPDATE users
+        SET password = '$2a$10$JofcKIcaYmEaFudtzfuAfuFpwLPe3t/czs/cKdsz0IEdieXmWnu76'
+        WHERE email = %s""", dev_email)
+        logger.debug("Inserted dev user {}", dev_email)
 
 
 def create_app():
@@ -106,6 +128,7 @@ def create_app():
     _register_error_handlers(app)
     args = _parse_env_vars(_parse_args())
     task_runner = _configure_task_runner(args)
-    _insert_initial_data(args)
+    if args["environment"] == "development":
+        _setup_dev(args["dev_email"])
 
     return app, args, task_runner

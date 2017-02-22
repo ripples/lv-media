@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 
 import logging
+
 from logging.handlers import TimedRotatingFileHandler
 from server import create_app
 
@@ -24,7 +25,10 @@ def _configure_logging():
 
 if __name__ == '__main__':
     _configure_logging()
-    logging.info('Starting task runner')
-    _task_runner.start()
+
+    if _task_runner:
+        logging.info('Starting task runner')
+        _task_runner.start()
+
     logging.info('Starting server')
     app.run(host="0.0.0.0", port=int(_args['port']) or 5000, debug=bool(_args['debug']))
