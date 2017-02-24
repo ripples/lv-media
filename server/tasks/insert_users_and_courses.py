@@ -83,25 +83,17 @@ def _insert_data(emails: set, courses: set, users_to_courses: dict):
     """
     connection = connect()
     with connection.cursor() as cursor:
-        cursor.execute("START TRANSACTION")
-        try:
-            if len(emails) > 0:
-                cursor.executemany('''
-                          INSERT IGNORE INTO users(email)
-                          VALUES(%s)
-                          ''', emails)
+        if len(emails) > 0:
+            cursor.executemany('''
+                      INSERT IGNORE INTO users(email)
+                      VALUES(%s)
+                      ''', emails)
 
-            if len(courses) > 0:
-                cursor.executemany('''
-                          INSERT IGNORE INTO courses(id, semester_id)
-                          VALUES(%s, %s)
-                          ''', list(courses))
-        except err.Error as e:
-            logging.getLogger().error(e)
-            connection.rollback()
-            return
-
-        connection.commit()
+        if len(courses) > 0:
+            cursor.executemany('''
+                      INSERT IGNORE INTO courses(id, semester_id)
+                      VALUES(%s, %s)
+                      ''', list(courses))
 
         if len(emails) <= 0:
             return
