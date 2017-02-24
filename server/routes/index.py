@@ -1,6 +1,7 @@
 #! /usr/bin/env python3
 from flask import abort, jsonify, Blueprint
 
+from server.exceptions.InternalError import InternalError
 from server.exceptions.NotFound import NotFound
 from server.libs.parser import Parser
 
@@ -16,7 +17,10 @@ def root():
 
 @index.route('/semesters')
 def semesters():
-    return jsonify(list(courses_cache.keys()))
+    try:
+        return jsonify(list(courses_cache.keys()))
+    except Exception as e:
+        raise InternalError(e)
 
 
 @index.route('/<semester>')
@@ -25,6 +29,8 @@ def courses(semester):
         return jsonify(list(courses_cache[semester].keys()))
     except KeyError as e:
         raise NotFound("{} not found".format(e))
+    except Exception as e:
+        raise InternalError(e)
 
 
 @index.route('/<semester>/<course>')
@@ -33,8 +39,13 @@ def lectures(semester, course):
         return jsonify(courses_cache[semester][course])
     except KeyError as e:
         raise NotFound("{} not found".format(e))
+    except Exception as e:
+        raise InternalError(e)
 
 
 @index.route('/<semester>/<course>/<lecture>/data')
 def lecture_data(semester, course, lecture):
-    return jsonify(parser.lecture_data(semester, course, lecture))
+    try:
+        return jsonify(parser.lecture_data(semester, course, lecture))
+    except Exception as e:
+        raise InternalError(e)

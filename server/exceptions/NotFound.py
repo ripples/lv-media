@@ -10,12 +10,12 @@ class NotFound(Exception):
         self._payload = payload
 
     def to_dict(self):
-        rv = dict(self._payload or ())
-        rv["error"] = self._message
-        return rv
+        result = dict(self._payload or ())
+        result["error"] = self._message
+        return result
 
     @staticmethod
-    def handle_key_error(error):
+    def handle(error):
         response = jsonify(error.to_dict())
         response.status_code = error.status_code
         return response

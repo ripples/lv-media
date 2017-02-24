@@ -22,7 +22,9 @@ def _register_blueprints(app):
 
 def _register_error_handlers(app):
     from server.exceptions.NotFound import NotFound
-    app.register_error_handler(NotFound, NotFound.handle_key_error)
+    app.register_error_handler(NotFound, NotFound.handle)
+    from server.exceptions.InternalError import InternalError
+    app.register_error_handler(InternalError, InternalError.handle)
 
 
 def _parse_args():

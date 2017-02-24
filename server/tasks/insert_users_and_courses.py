@@ -5,9 +5,6 @@ from shutil import move
 from os.path import isfile, join, splitext
 from pathlib import Path
 
-import logging
-from pymysql import err
-
 from server import CONTAINER_MEDIA_DIR
 from server.libs.database import connect, get_latest_semester, bind_values
 
