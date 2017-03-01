@@ -2,3 +2,4 @@ Flask==0.11
 APScheduler==3.2.0
 PyMySQL==0.7.9
 requests==2.13.0
+xlrd==1.0.0

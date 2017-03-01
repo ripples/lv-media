@@ -96,7 +96,7 @@ def get_latest_semester() -> str:
 def bind_values(query: str, args: Union[list, set]) -> str:
     """
 
-    Formats a query that has a single '%s' with the proper amount of '%s' based on args size
+    Formats a query that has a single '{}' with the proper amount of '%s' based on args size
 
     Args:
         :param (str) query: query to format
@@ -105,4 +105,5 @@ def bind_values(query: str, args: Union[list, set]) -> str:
     Returns:
         str: Formatted query
     """
+
     return query.format(', '.join(list(map(lambda x: '%s', args))))
