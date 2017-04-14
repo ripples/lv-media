@@ -59,7 +59,7 @@ def _configure_app():
 
 def _configure_task_runner(app_args):
     # We don't want to reload the task runner when flask reloads
-    if app_args['WERKZEUG_RUN_MAIN'] != 'true':
+    if app_args['debug'] and app_args['WERKZEUG_RUN_MAIN'] == 'true':
         return
 
     #TODO cleanup
