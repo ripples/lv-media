@@ -61,7 +61,7 @@ def _read_csv(file: str, semester: str, users: set, courses: set, users_to_cours
             users.add((email, None, None))
 
             course_parts = row[1].split()
-            course_name = '{} {}'.format(course_parts[0], course_parts[1])
+            course_name = '{}{}'.format(course_parts[0], course_parts[1])
             course = (course_name, semester)
             courses.add(course)
 
@@ -81,7 +81,7 @@ def _read_excel(file: str, semester: str, users: set, courses: set, users_to_cou
         :param (set) users_to_courses: global store users to courses mapping
     """
     course_parts = file.split('/')[-1].split('_')
-    course_name = '{} {}'.format(course_parts[0], course_parts[1])
+    course_name = '{}{}'.format(course_parts[0], course_parts[1])
     courses.add((course_name, semester))
 
     book = xlrd.open_workbook(file)
