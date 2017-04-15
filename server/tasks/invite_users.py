@@ -20,7 +20,7 @@ def run(envs: dict):
         url = 'http://{}:{}/internal/users/invite'.format(envs['lv-server-host'], envs['lv-server-port'])
         s = requests.Session()
         s.mount('http://', HTTPAdapter(max_retries=Retry(total=10, backoff_factor=0.1)))
-        response = s.post(url, json={'emails': emails})
+        response = s.post(url, json={'emails': emails}, stream=True)
         response.raise_for_status()
 
         cursor.executemany("UPDATE users SET invited=b'1' WHERE email = %s", emails)
