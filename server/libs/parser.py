@@ -52,7 +52,7 @@ class Parser:
             for line in info.readlines():
                 match = re.search('duration: (\d+)', line)
                 if match is not None:
-                    data['duration'] = match.group(1)
+                    data['duration'] = int(match.group(1))
 
                 match = re.search('timestamp: (\d+)', line)
                 if match is not None:
